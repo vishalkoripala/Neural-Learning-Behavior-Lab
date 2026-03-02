@@ -57,3 +57,4 @@ The goal is to provide conceptual clarity on how neural learning algorithms upda
 ```bash
 git clone https://github.com/vishalkoripala/Neural-Learning-Behavior-Lab.git
 cd Neural-Learning-Behavior-Lab
+## 🔗 Live Demo (if deployed)
