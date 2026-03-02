@@ -1,0 +1,37 @@
+Neural Learning Rule Experiment Log
+---------------------------------Hebbian: 0.0
+ALL: Hebbian: 0.000
+Error: 328350.000
+Competitive: 3.845
+Hebbian: 0.0
+ALL: Hebbian: 0.000
+Error: 3283.500
+Competitive: 2.318
+Hebbian: 0.0
+ALL: Hebbian: 0.000
+Error: 3283.500
+Competitive: 2.400
+ALL: 
+Comparison Summary:
+--------------------------
+Hebbian Weight Norm     : 0.000
+Error Correction Loss   : 3283.500
+Competitive Separation  : 1.712
+
+Observation:
+Hebbian shows correlation strength.
+Error Correction shows supervised convergence.
+Competitive shows clustering separation.
+
+ALL: 
+Comparison Summary:
+--------------------------
+Hebbian Weight Norm     : 0.000
+Error Correction Loss   : 3283.500
+Competitive Separation  : 2.910
+
+Observation:
+Hebbian shows correlation strength.
+Error Correction shows supervised convergence.
+Competitive shows clustering separation.
+
