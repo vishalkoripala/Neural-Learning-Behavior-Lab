@@ -7,6 +7,7 @@ An interactive Streamlit-based application to visualize and compare classical ne
 ## 📌 Project Description
 
 The **Neural Learning Behavior Laboratory** is an educational tool designed to demonstrate how different neural learning rules behave during training.
+### 🔗 Live Demo (https://neural-learning-behavior-lab.streamlit.app/)
 
 This project allows users to:
 
@@ -57,4 +58,5 @@ The goal is to provide conceptual clarity on how neural learning algorithms upda
 ```bash
 git clone https://github.com/vishalkoripala/Neural-Learning-Behavior-Lab.git
 cd Neural-Learning-Behavior-Lab
-## 🔗 Live Demo (if deployed)
+
+
