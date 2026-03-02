@@ -55,5 +55,5 @@ The goal is to provide conceptual clarity on how neural learning algorithms upda
 ### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/Neural-Learning-Behavior-Lab.git
+git clone https://github.com/vishalkoripala/Neural-Learning-Behavior-Lab.git
 cd Neural-Learning-Behavior-Lab
