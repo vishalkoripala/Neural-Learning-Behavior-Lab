@@ -448,20 +448,35 @@ if st.session_state.experiments:
         "text/csv",
         key="download_csv"
     )
-if model_type in ["Perceptron","Adaline","Logistic"]:
+# -------------------------
+# Accuracy
+# -------------------------
+
+if model_type in ["Perceptron", "Adaline", "Logistic"]:
 
     predictions = np.sign(X @ w + b)
 
-   accuracy = np.mean( mlp_preds.flatten() == (y == 1).astype(int) )
+    accuracy = np.mean(predictions == y)
 
-    st.write("Final Accuracy:", round(accuracy * 100, 2), "%")
+    st.write(
+        "Final Accuracy:",
+        round(accuracy * 100, 2),
+        "%"
+    )
 
 elif model_type == "MLP (1 Hidden Layer)":
 
     mlp_preds = (preds > 0.5).astype(int).flatten()
-    accuracy = np.mean( mlp_preds.flatten() == (y == 1).astype(int))
 
-    st.write("Final Accuracy:", round(accuracy * 100, 2), "%")
+    accuracy = np.mean(
+        mlp_preds == (y == 1).astype(int)
+    )
+
+    st.write(
+        "Final Accuracy:",
+        round(accuracy * 100, 2),
+        "%"
+    )
 
 else:
 
