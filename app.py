@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
 st.set_page_config(layout="wide")
 st.markdown("""
 ### Neural Learning Behavior Laboratory
@@ -23,7 +24,7 @@ def plot_decision_surface(ax, predict_func, X):
 
     ax.contourf(xx, yy, Z > 0, alpha=0.2)
 
-st.set_page_config(layout="wide")
+
 
 
 # -------------------------
@@ -42,7 +43,14 @@ dataset_type = st.selectbox(
 
 model_type = st.selectbox(
     "Learning Rule",
-    ["Perceptron", "Hebbian", "Logistic", "MLP (1 Hidden Layer)", "Competitive"]
+    [
+        "Perceptron",
+        "Hebbian",
+        "Adaline",
+        "Logistic",
+        "MLP (1 Hidden Layer)",
+        "Competitive"
+    ]
 )
 
 lr = st.slider("Learning Rate", 0.01, 1.0, 0.1)
@@ -163,6 +171,7 @@ if uploaded_file is None:
 # -------------------------
 # Model Training
 # -------------------------
+weight_history = []
 w = np.zeros(X.shape[1])
 b = 0
 loss_history = []
@@ -172,16 +181,36 @@ if model_type == "Hebbian":
         for i in range(len(X)):
             w += lr * y[i] * X[i]
         loss_history.append(np.linalg.norm(w))
+elif model_type == "Adaline":
 
-elif model_type == "Perceptron":
     for epoch in range(epochs):
+
+        outputs = X @ w + b
+        errors = y - outputs
+
+        w += lr * X.T @ errors / len(X)
+        b += lr * np.mean(errors)
+
+        mse = np.mean(errors**2)
+
+        loss_history.append(mse)
+        weight_history.append(w.copy())
+elif model_type == "Perceptron":
+
+    for epoch in range(epochs):
+
         errors = 0
+
         for i in range(len(X)):
+
             if y[i] * (np.dot(w, X[i]) + b) <= 0:
+
                 w += lr * y[i] * X[i]
                 b += lr * y[i]
                 errors += 1
+
         loss_history.append(errors)
+        weight_history.append(w.copy())
 
 elif model_type == "Logistic":
     y_log = (y == 1).astype(int)
@@ -193,10 +222,11 @@ elif model_type == "Logistic":
         b -= lr * gradient_b
         loss = np.mean(-(y_log*np.log(preds+1e-9) + (1-y_log)*np.log(1-preds+1e-9)))
         loss_history.append(loss)
+        weight_history.append(w.copy())
 
 elif model_type == "MLP (1 Hidden Layer)":
     hidden_size = 4
-    W1 = np.random.randn(2, hidden_size)
+    W1 = np.random.randn(X.shape[1], hidden_size)
     b1 = np.zeros(hidden_size)
     W2 = np.random.randn(hidden_size, 1)
     b2 = 0
@@ -226,8 +256,8 @@ elif model_type == "MLP (1 Hidden Layer)":
         loss_history.append(loss)
 
 elif model_type == "Competitive":
-    w1 = np.random.randn(2)
-    w2 = np.random.randn(2)
+    w1 = np.random.randn(X.shape[1])
+    w2 = np.random.randn(X.shape[1])
     for epoch in range(epochs):
         for x in X:
             if np.linalg.norm(x-w1) < np.linalg.norm(x-w2):
@@ -246,18 +276,31 @@ if model_type in ["Perceptron", "Logistic"]:
 col1, col2 = st.columns(2)
 
 with col1:
+
     fig, ax = plt.subplots()
 
-    # Plot data generically
     class_pos = X[y == 1]
     class_neg = X[y == -1]
 
-    ax.scatter(class_pos[:, 0], class_pos[:, 1], label="Class 1")
-    ax.scatter(class_neg[:, 0], class_neg[:, 1], label="Class -1")
+    ax.scatter(class_pos[:,0], class_pos[:,1], label="Class 1")
+    ax.scatter(class_neg[:,0], class_neg[:,1], label="Class -1")
 
+    if model_type in ["Perceptron","Adaline","Logistic"]:
 
-    # Decision surface
-    if model_type in ["Perceptron", "Logistic"]:
+        predictions = np.sign(X @ w + b)
+
+        incorrect = predictions != y
+
+        ax.scatter(
+            X[incorrect,0],
+            X[incorrect,1],
+            marker="x",
+            s=150,
+            label="Misclassified"
+        )
+
+    if model_type in ["Perceptron","Adaline","Logistic"]:
+
         def predict(grid):
             return grid @ w + b
 
@@ -265,6 +308,7 @@ with col1:
 
     ax.legend()
     ax.set_title("Decision Visualization")
+
     st.pyplot(fig)
 stress_test = st.checkbox("Run Learning Rate Stress Test")
 compare_mode = st.checkbox("Enable Side-by-Side Model Comparison")
@@ -291,6 +335,25 @@ if stress_test:
     ax_stress.legend()
     ax_stress.set_title("Learning Rate Stress Test")
     st.pyplot(fig_stress)
+if len(weight_history) > 0:
+
+    st.subheader("Weight Evolution")
+
+    fig_w, ax_w = plt.subplots()
+
+    weight_history_np = np.array(weight_history)
+
+    for i in range(weight_history_np.shape[1]):
+        ax_w.plot(
+            weight_history_np[:,i],
+            label=f"Weight {i+1}"
+        )
+
+    ax_w.set_xlabel("Epoch")
+    ax_w.set_ylabel("Value")
+    ax_w.legend()
+
+    st.pyplot(fig_w)
 if model_type == "Hebbian":
     st.info("Hebbian Learning: Unsupervised correlation-based weight update.")
 elif model_type == "Perceptron":
@@ -307,7 +370,21 @@ with col2:
     ax2.set_title("Learning Curve")
     ax2.set_xlabel("Epoch")
     st.pyplot(fig2)
+if model_type in ["Perceptron","Adaline","Logistic"]:
 
+    predictions = np.sign(X @ w + b)
+
+    cm = confusion_matrix(y, predictions)
+
+    st.subheader("Confusion Matrix")
+
+    cm_df = pd.DataFrame(
+        cm,
+        index=["Actual -1","Actual +1"],
+        columns=["Pred -1","Pred +1"]
+    )
+
+    st.dataframe(cm_df)
 # -------------------------
 # Metrics
 # -------------------------
@@ -335,7 +412,29 @@ if st.button("Run Experiment & Log Results", key="log_btn"):
             "Final Metric": float(loss_history[-1])
         })
 if st.button("Download Model Weights"):
-    st.json({"weights": w.tolist()})
+
+    if model_type == "MLP (1 Hidden Layer)":
+
+        st.json({
+            "W1": W1.tolist(),
+            "b1": b1.tolist(),
+            "W2": W2.tolist(),
+            "b2": float(b2)
+        })
+
+    elif model_type == "Competitive":
+
+        st.json({
+            "cluster1": w1.tolist(),
+            "cluster2": w2.tolist()
+        })
+
+    else:
+
+        st.json({
+            "weights": w.tolist(),
+            "bias": float(b)
+        })
 if st.session_state.experiments:
     st.subheader("Experiment Comparison Table")
     df = pd.DataFrame(st.session_state.experiments)
@@ -349,6 +448,23 @@ if st.session_state.experiments:
         "text/csv",
         key="download_csv"
     )
-predictions = np.sign(X @ w + b)
-accuracy = np.mean(predictions == y)
-st.write("Final Accuracy:", accuracy)
+if model_type in ["Perceptron","Adaline","Logistic"]:
+
+    predictions = np.sign(X @ w + b)
+
+   accuracy = np.mean( mlp_preds.flatten() == (y == 1).astype(int) )
+
+    st.write("Final Accuracy:", round(accuracy * 100, 2), "%")
+
+elif model_type == "MLP (1 Hidden Layer)":
+
+    mlp_preds = (preds > 0.5).astype(int).flatten()
+    accuracy = np.mean( mlp_preds.flatten() == (y == 1).astype(int))
+
+    st.write("Final Accuracy:", round(accuracy * 100, 2), "%")
+
+else:
+
+    st.info(
+        "Accuracy not applicable for unsupervised learning."
+    )
